@@ -1,48 +1,65 @@
 # .github/workflows/build.yml
-# This file defines the "build" and "test" process for the CEA-4.0 simulation.
+name: Build and Test CEA-4.0
 
-name: Build and Test Simulation
-
-# --- Triggers: When this workflow runs ---
 on:
   push:
-    branches: [ "main" ] # Run on pushes to the main branch
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ] # Run on pull requests targeting the main branch
+    branches: [ "main" ]
 
-# --- Jobs: The steps to perform ---
 jobs:
   build-and-test:
-    # --- Environment: The virtual machine to use ---
     runs-on: ubuntu-latest
 
-    # --- Steps: The sequence of commands to execute ---
     steps:
-      # 1. Check out the repository code
+      # -------------------------------------------------
+      # 1. Checkout the repo
+      # -------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Set up the Python environment
-      - name: Set up Python 3.9
+      # -------------------------------------------------
+      # 2. Set up Python (any 3.9+ works)
+      # -------------------------------------------------
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.9
+          python-version: "3.11"   # 3.9 is fine, 3.11 is faster
 
-      # 3. Install the project dependencies from requirements.txt
+      # -------------------------------------------------
+      # 3. Install dependencies
+      # -------------------------------------------------
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      
-      # 4. (Optional but good practice) Lint the code with a style checker
+          pip install numpy matplotlib mpmath imageio
+
+      # -------------------------------------------------
+      # 4. (Optional) Lint with flake8
+      # -------------------------------------------------
       - name: Lint with flake8
         run: |
           pip install flake8
-          # stop the build if there are Python syntax errors or undefined names
+          # Fail on syntax errors / undefined names
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          # Treat everything else as warnings
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      # 5. Run the test command
-      - name: Run the simulation in test mode
-        run: python main.py --test
+      # -------------------------------------------------
+      # 5. Run the simulation in CI test mode
+      # -------------------------------------------------
+      - name: Run CEA-4.0 in test mode
+        run: |
+          python main_final_corrected.py --test
+
+      # -------------------------------------------------
+      # 6. Upload the GIF (and any frames) as artifacts
+      # -------------------------------------------------
+      - name: Upload GIF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cea-universe-gif
+          path: |
+            cea_universe_evolution.gif
+            frames/*.png
+          if-no-files-found: warn
