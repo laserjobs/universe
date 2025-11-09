@@ -7,9 +7,7 @@ This repository contains the source code for the CEA-4.0 simulation, a cellular 
 ## Visualization of an Awakening Universe
 
 The following animation shows the simulation over 1000 steps. Watch as consciousness spreads, clusters merge, and the universe evolves under the oscillating probability of creation dictated by ζ(s).
-
-*(After running the simulation once, drag and drop `cea_universe_evolution.gif` here to display it.)*
-`[placeholder for cea_universe_evolution.gif]`
+![universe](https://github.com/user-attachments/assets/aa8ff4ca-0ae2-4e39-8a50-7b58e64e070a)
 
 ## Features
 
