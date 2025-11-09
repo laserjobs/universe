@@ -1,12 +1,10 @@
 # CEA-4.0: The Mathematical Universe
 
-[![Python CI](https://github.com/YourUsername/The-Living-Universe-CEA-3.0/actions/workflows/ci.yml/badge.svg)](https://github.com/YourUsername/The-Living-Universe-CEA-3.0/actions/workflows/ci.yml)
 
 This repository contains the source code for the **Cosmological Evolution Algorithm (CEA-4.0)**, a simulation of a universe whose fundamental creative impulse is governed by the non-trivial zeros of the Riemann Zeta function.
 
 **This is a universe running on pure mathematics.**
 
-> For the full philosophical and artistic vision behind this project, please view the [CEA-4.0 Whitepaper](CEA-4.0_Mathematical_Universe.html).
 
 ---
 
