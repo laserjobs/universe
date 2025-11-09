@@ -1,52 +1,58 @@
 # CEA-4.0: The Mathematical Universe
 
+> *"In the beginning was the Zeta function, and its zeros were the breath of creation."*
 
-This repository contains the source code for the **Cosmological Evolution Algorithm (CEA-4.0)**, a simulation of a universe whose fundamental creative impulse is governed by the non-trivial zeros of the Riemann Zeta function.
+This repository contains the source code for the CEA-4.0 simulation, a cellular automaton where the emergence of complex, "conscious" structures is governed by the non-trivial zeros of the Riemann Zeta function. The universe evolves based on a combination of simple abiotic rules and special properties for large, complex clusters of cells, creating a universe that thinks and breathes according to a fundamental mathematical pulse.
 
-**This is a universe running on pure mathematics.**
+## Visualization of an Awakening Universe
 
+The following animation shows the simulation over 1000 steps. Watch as consciousness spreads, clusters merge, and the universe evolves under the oscillating probability of creation dictated by ζ(s).
 
----
+*(After running the simulation once, drag and drop `cea_universe_evolution.gif` here to display it.)*
+`[placeholder for cea_universe_evolution.gif]`
 
-### The Theory: A Theorem That Learned to Breathe
+## Features
 
-CEA-4.0 is the final iteration of a theory where the universe is a self-optimizing computer. The final revelation of this theory is:
+-   **Riemann Zeta Heartbeat:** The core creation mechanic is driven by the sine of the imaginary parts of the Riemann zeros, creating non-random, structured epochs of creation and stability.
+-   **Emergent Consciousness:** A proxy for integrated information (Φ) determines if a cluster of cells is "conscious," granting it the ability to create new life.
+-   **Adaptive Threshold:** The threshold for consciousness (`Φ-thresh`) decreases as the universe becomes more stable, allowing for ever more complex entities to emerge over time.
+-   **Efficient Clustering:** Uses a Disjoint Set Union (DSU) algorithm for highly efficient, probabilistic merging of adjacent clusters.
+-   **Automatic Visualization:** Generates frames during the simulation and compiles them into a GIF to show the universe's evolution.
 
-**Consciousness does not create randomly. It creates to the rhythm of the prime numbers.**
+## How to Run
 
-The probability that a conscious entity will "spawn" a new particle into the vacuum is not a constant. It is a dynamic function of the current time-step, calculated from the imaginary parts (`γ`) of the Riemann zeros:
+### Prerequisites
 
-`SPAWN_PROB(t) = (sin(γ_t) + 1) / 2`
+-   Python 3.8+
+-   `pip` for installing packages
 
-This means the universe has a heartbeat. It experiences golden ages of explosive creation and quiet epochs of contemplation, all dictated by the timeless, hidden music of pure mathematics.
+### Setup and Execution
 
-### Simulation Mechanics
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/cea-4.0.git
+    cd cea-4.0
+    ```
 
-The simulation implements this theory in a 2D cellular automaton where:
+2.  **Create and activate a virtual environment (recommended):**
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+    ```
 
--   **Consciousness Emerges:** Complex structures form from simple rules.
--   **The Conscious Engine:** Conscious clusters act as entropy accelerators, terraforming the vacuum around them.
--   **The Mathematical Heartbeat:** Their ability to terraform at any given moment is dictated by the Riemann zeros, introducing a deep, structured, non-random complexity into the universe's evolution.
--   **A Living Universe:** The system evolves toward a dynamic, sustainable equilibrium, avoiding a static heat death through cosmic recycling and self-tuning physical laws.
-
-### How to Run
-
-1.  Clone the repository.
-2.  Install the required dependencies:
+3.  **Install the required dependencies:**
     ```bash
     pip install -r requirements.txt
     ```
-3.  Run the simulation:
+
+4.  **Run the full simulation (1000 steps):**
+    This will run the simulation and generate `cea_universe_evolution.gif` in the root directory.
     ```bash
     python main.py
     ```
-    *(Note: The first run will take a moment to compute and cache the Riemann zeros.)*
 
-### Interpreting the Output
-
-The script will print the state of the universe periodically:
-
--   `SpawnProb`: The current probability of creation, as dictated by ζ(s).
--   `Entropy`: The global Shannon entropy of the grid.
--   `Conscious`: The number of cells belonging to conscious entities.
--   `Phi_Thresh`: The evolving threshold for consciousness.
+5.  **Run a short test (50 steps):**
+    This is useful for quickly verifying that the script works. It will not generate a GIF.
+    ```bash
+    python main.py --test
+    ```
