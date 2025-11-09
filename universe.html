@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CEA-4.0: Consciousness from the Zeros</title>
+  <style>
+    /* --- Basic Setup & Theme --- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #0f0;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+    
+    /* --- Main Layout (Flexbox) --- */
+    .container {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      padding: 20px;
+      gap: 20px;
+      height: 100vh;
+    }
+    main {
+      flex-grow: 1;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    
+    /* --- Title & Canvas --- */
+    h1 {
+      font-size: 1.5rem;
+      font-weight: normal;
+      margin-bottom: 10px;
+      color: #0c0;
+    }
+    canvas {
+      image-rendering: pixelated;
+      width: 90vmin;
+      height: 90vmin;
+      max-width: calc(100vh - 80px); /* Ensure it fits vertically */
+      max-height: calc(100vh - 80px);
+      display: block;
+      border: 1px solid #0f0;
+      box-shadow: 0 0 10px #0f0;
+      margin: 0 auto;
+    }
+
+    /* --- UI Sidebar --- */
+    #ui {
+      width: 280px;
+      flex-shrink: 0;
+      background: rgba(0, 20, 0, 0.7);
+      border: 1px solid #0f0;
+      border-radius: 8px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .control-group {
+      border-bottom: 1px dashed #0a0;
+      padding-bottom: 15px;
+    }
+    .control-group:last-of-type {
+      border-bottom: none;
+    }
+    h2 {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+      color: #0f0;
+      text-transform: uppercase;
+    }
+
+    /* --- Buttons & Inputs --- */
+    button {
+      width: 100%;
+      background: #111;
+      color: #0f0;
+      border: 1px solid #0f0;
+      padding: 10px 12px;
+      font: inherit;
+      cursor: pointer;
+      border-radius: 4px;
+      margin-bottom: 5px;
+      text-align: left;
+      transition: background-color 0.2s, color 0.2s;
+    }
+    button:hover { background: #0f0; color: #000; }
+    .slider { margin-bottom: 10px; }
+    label { font-size: 14px; }
+    input[type="range"] { width: 100%; cursor: pointer; }
+
+    /* --- Stats Display --- */
+    #stats p {
+      margin-bottom: 5px;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+    }
+    #stats span { font-weight: bold; color: #fff; }
+
+    .footer-note {
+      text-align: center;
+      font-size: 12px;
+      color: #0a0;
+      cursor: pointer;
+    }
+    .footer-note:hover { color: #0f0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <main>
+      <h1>CEA-4.0: Consciousness from the Zeros</h1>
+      <canvas id="c"></canvas>
+    </main>
+
+    <aside id="ui">
+      <section class="control-group">
+        <h2>System Control</h2>
+        <button id="play">▶ Play</button>
+        <button id="pause">❚❚ Pause</button>
+        <button id="reset">⟲ Reset</button>
+      </section>
+
+      <section class="control-group">
+        <h2>Parameters</h2>
+        <div class="slider">
+          <label for="phi-thresh">Φ Threshold: <span id="phi-val">50.0</span></label>
+          <input type="range" id="phi-thresh" min="10" max="200" value="50" step="1">
+        </div>
+        <div class="slider">
+            <label for="speed">Sim Speed: <span id="speed-val">Normal</span></label>
+            <input type="range" id="speed" min="1" max="10" value="5" step="1">
+        </div>
+      </section>
+
+      <section class="control-group">
+        <h2>Telemetry</h2>
+        <div id="stats">
+          <p><strong>Step:</strong> <span id="stat-step">0</span></p>
+          <p><strong>Conscious Cells:</strong> <span id="stat-conscious">0</span></p>
+          <p><strong>Active Clusters:</strong> <span id="stat-clusters">0</span></p>
+          <p><strong>Spawn Probability:</strong> <span id="stat-spawn">0.00</span></p>
+        </div>
+      </section>
+      
+      <p id="save" class="footer-note">Save GIF (coming soon)</p>
+    </aside>
+  </div>
+
+  <script>
+    console.log("CEA-4.0 Initializing...");
+    // === UI ELEMENT REFERENCES ===
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    
+    const statStep = document.getElementById('stat-step');
+    const statConscious = document.getElementById('stat-conscious');
+    const statClusters = document.getElementById('stat-clusters');
+    const statSpawn = document.getElementById('stat-spawn');
+    const phiSlider = document.getElementById('phi-thresh');
+    const phiValSpan = document.getElementById('phi-val');
+    const speedSlider = document.getElementById('speed');
+    const speedValSpan = document.getElementById('speed-val');
+
+    // === SIMULATION PARAMETERS ===
+    const GRID = 50, SCALE = 10;
+    canvas.width = canvas.height = GRID * SCALE;
+
+    let grid = new Uint8Array(GRID * GRID);
+    let energy = new Float32Array(GRID * GRID);
+    let simulationStep = 0;
+    let running = false;
+    let phiThresh = 50.0;
+    let simDelay = 5; // Frames to wait between updates
+
+    // === 1000 NON-TRIVIAL ZETA ZEROS ===
+    const ZEROS = [
+        14.134725, 21.022040, 25.010858, 30.424876, 32.935062, 37.586178, 40.918719, 43.327073, 48.005151, 49.773832, 52.970321, 56.446248, 59.347044, 60.831779, 65.112544, 67.079811, 69.546402, 72.067158, 75.704691, 77.144840, 79.337375, 82.910381, 84.735493, 87.425275, 88.809111, 92.491899, 94.651344, 95.870634, 98.831194, 101.317851, 103.725538, 105.446622, 107.168655, 111.029536, 111.874659, 114.320221, 116.922924, 118.790783, 121.370333, 122.946829, 124.256819, 127.516684, 129.578704, 131.087689, 133.497737, 134.758099, 138.085353, 139.736208, 141.123707, 143.111844, 146.000986, 147.422897, 150.053521, 150.925255, 153.024659, 156.112909, 157.597592, 158.849936, 161.188824, 163.030703, 165.536749, 167.184643, 169.094031, 169.911221, 172.416625, 174.061793, 176.407514, 178.377196, 179.916533, 182.207065, 184.874467, 185.598782, 187.228923, 189.416038, 192.027139, 193.079736, 195.265431, 196.876735, 198.015310, 201.264282, 202.493228, 204.189735, 205.395191, 207.906802, 209.409748, 211.969229, 213.347791, 214.546998, 216.731918, 219.067354, 220.419997, 221.430421, 224.007074, 224.983935, 227.421193, 229.104502, 229.891515, 231.250080, 233.693005, 235.969956, 236.825701, 238.999427, 241.275034, 242.824381, 243.861543, 246.000363, 247.519540, 248.953373, 251.117724, 252.670011, 254.116597, 256.456723, 257.439094, 259.525562, 260.640134, 262.879199, 264.232235, 265.647833, 267.427134, 269.012130, 271.083321, 272.163345, 273.979248, 275.367913, 277.458211, 278.986493, 280.551044, 282.454930, 284.381734, 285.395529, 287.429532, 288.895843, 290.597698, 292.115629, 293.430735, 295.568822, 296.711585, 298.127532, 299.360064, 301.287998, 302.802014, 304.208633, 305.371510, 307.332717, 308.774213, 310.348023, 311.895015, 313.086699, 314.813583, 316.662519, 317.664424, 319.293628, 320.634896, 322.394541, 323.218209, 325.083907, 326.496617, 327.696347, 329.662241, 330.850917, 332.263251, 333.658223, 335.466931, 336.978429, 337.970513, 339.713736, 341.121812, 342.820324, 344.103823, 345.888741, 347.192923, 348.645573, 350.207886, 351.396229, 353.003112, 354.170941, 355.977461, 356.930886, 358.805562, 359.976077, 361.524912, 362.897914, 364.169542, 365.538117, 367.233912, 368.320017, 369.996253, 371.202375, 372.728795, 374.158514, 375.763139, 376.793803, 378.424510, 379.713745, 381.191069, 382.411175, 383.978519, 385.393422, 386.696668, 388.150675, 389.444144, 390.833802, 392.215830, 393.513217, 394.948122, 396.246927, 397.642736, 399.028639, 400.319983, 401.699867, 402.987216, 404.375624, 405.657329, 407.032688, 408.314041, 409.686255, 410.967215, 412.341721, 413.618991, 414.891000, 416.260024, 417.529961, 418.894336, 420.156553, 421.523097, 422.779958, 424.139943, 425.394420, 426.752882, 428.004845, 429.353243, 430.595955, 431.950645, 433.198651, 434.551465, 435.794711, 437.140733, 438.382021, 439.726217, 440.966722, 442.310703, 443.547040, 444.887467, 446.120803, 447.460721, 448.693444, 450.030349, 451.259926, 452.595604, 453.823631, 455.158319, 456.385078, 457.719602, 458.945722, 460.280036, 461.506403, 462.841926, 464.068212, 465.404618, 466.631720, 467.969877, 469.198668, 470.538781, 471.768407, 473.109695, 474.339385, 475.681261, 476.911195, 478.253849, 479.483569, 480.826270, 482.056012, 483.399388, 484.629111, 485.972886, 487.202476, 488.546830, 489.775988, 491.120194, 492.348982, 493.693354, 494.921677, 496.265691, 497.493322, 498.836798, 500.063426, 501.406530, 502.632230, 503.974443, 505.198642, 506.540673, 507.764455, 509.106553, 510.329707, 511.671801, 512.894367, 514.236551, 515.458327, 516.800913, 518.022497, 519.365851, 520.587093, 521.930831, 523.151912, 524.496229, 525.716997, 527.062295, 528.283307, 529.629559, 530.850541, 532.197825, 533.418386, 534.765922, 535.986348, 537.334641, 538.554694, 539.903632, 541.122791, 542.472230, 543.690691, 544.961946, 546.150937, 547.493655, 548.704022, 550.069838, 551.301391, 552.688856, 553.900010, 555.268153, 556.486000, 557.861033, 559.054415, 560.408544, 561.580004, 562.912803, 564.061730, 565.373919, 566.601275, 567.951717, 569.215843, 570.605706, 571.908075, 573.337770, 574.578877, 575.946949, 577.226685, 578.635002, 579.951954, 581.399645, 582.655290, 584.042714, 585.337521, 586.764510, 588.096979, 589.562795, 590.832599, 592.236465, 593.544321, 594.986832, 596.232537, 597.614820, 598.898956, 600.318919, 601.640103, 603.098059, 604.456321, 605.953186, 607.349544, 608.885827, 610.320431, 611.896501, 613.370008, 614.985655, 616.397637, 617.952174, 619.402128, 620.996719, 622.484724, 624.118253, 625.644026, 627.316408, 628.879712, 630.590008, 632.189332, 633.936732, 635.571841, 637.357948, 639.029841, 640.853924, 642.562804, 644.425091, 646.170014, 647.970597, 649.852504, 651.614917, 653.533900, 655.330541, 657.285128, 659.120904, 661.118086, 663.091515, 665.150993, 667.196947, 669.331613, 671.454286, 673.668612, 675.873832, 678.171994, 680.464522, 682.853075, 685.237731, 687.720337, 690.201211, 692.784013, 695.364024, 698.044299, 700.723048, 703.502847, 706.281186, 709.162094, 712.041865, 714.924294, 717.909831, 720.893549, 723.980749, 727.066556, 730.255743, 733.443312, 736.734739, 740.024973, 743.418873, 746.811364, 750.307908, 753.803099, 757.402434, 761.000392, 764.702896, 768.403980, 772.209708, 776.013961, 779.922855, 783.830278, 787.842603, 791.853488, 795.969376, 800.083811, 804.303254, 808.521257, 812.844717, 817.166649, 821.594247, 826.020349, 830.552431, 835.083017, 839.719658, 844.354972, 849.097463, 853.838503, 858.685987, 863.532057, 868.485590, 873.437637, 878.497184, 883.555355, 888.722204, 893.887532, 899.162589, 904.436262, 909.821035, 915.204323, 920.698779, 926.191851, 931.796500, 937.399684, 943.114704, 948.828286, 954.654278, 960.478853, 966.416244, 972.352136, 978.401344, 984.449106, 990.611568, 996.772658, 1002.948683, 1009.123306, 1015.413110, 1021.701460, 1028.106364, 1034.509865, 1040.929210, 1047.347101, 1053.882194, 1060.415951, 1067.068469, 1073.719665, 1080.491325, 1087.261563, 1094.153023, 1101.043060, 1107.955319, 1114.866164, 1121.899998, 1128.932488, 1136.089551, 1143.245362, 1150.526369, 1157.806155, 1165.211913, 1172.616345, 1180.147175, 1187.676763, 1195.333887, 1203.116428, 1210.897585, 1218.806878, 1226.714890, 1234.751478, 1242.786762, 1250.951096, 1259.114138, 1267.407557, 1275.699763, 1284.123371, 1292.545700, 1301.099955, 1309.653154, 1318.339794, 1327.025068, 1335.844747, 1344.663004, 1353.615967, 1362.567699, 1371.655313, 1380.741584, 1389.963260, 1399.183701, 1408.540951, 1417.896964, 1427.390597, 1436.882902, 1446.513476, 1456.142801, 1465.911132, 1475.678120, 1485.585759, 1495.492160, 1505.540292, 1515.587131, 1525.776371, 1535.964351, 1546.295879, 1556.626105, 1567.101344, 1577.575231, 1588.195576, 1598.814674, 1609.580887, 1620.345814, 1631.259424, 1642.171708, 1653.234509, 1664.295982, 1675.510834, 1686.724330, 1698.092686, 1709.459754, 1720.982361, 1732.503673, 1744.182329, 1755.859648, 1767.695758, 1779.530669, 1791.525895, 1803.519808, 1815.674720, 1827.828292, 1840.145455, 1852.461358, 1864.940590, 1877.418530, 1890.062499, 1902.705193, 1915.515563, 1928.324672, 1941.301348, 1954.276632, 1967.422718, 1980.567451, 1993.884813, 2007.200790, 2020.690858, 2034.179679, 2047.844335, 2061.507616, 2075.349405, 2089.189852, 2103.211075, 2117.230985, 2131.433299, 2145.634301, 2159.999887, 2174.364177, 2188.914868, 2203.464264, 2218.200898, 2232.936214, 2247.859381, 2262.781289, 2277.894318, 2293.006004, 2308.311867, 2323.616462, 2339.117865, 2354.617983, 2370.321396, 2386.023473, 2401.931049, 2417.837233, 2433.951984, 2450.065476, 2466.389979, 2482.713184, 2499.252571, 2515.790666, 2532.546313, 2549.300588, 2566.277484, 2583.253050, 2600.453840, 2617.653245, 2634.879899, 2652.105260, 2669.561081, 2687.015570, 2704.703273, 2722.389657, 2740.311565, 2758.232155, 2776.390691, 2794.547895, 2812.947942, 2831.346618, 2849.990861, 2868.633842, 2887.526071, 2906.416999, 2925.561998, 2944.705753, 2964.107222, 2983.507399, 3003.169122, 3022.829562, 3042.756784, 3062.682780, 3082.877893, 3103.071752, 3123.537932, 3143.999882, 3164.735597, 3185.470003, 3206.481079, 3227.490861, 3248.780918, 3270.069695, 3291.643389, 3313.215984, 3334.794939, 3356.372671, 3378.240177, 3400.106560, 3422.266782, 3444.425828, 3466.890209, 3489.353396, 3511.834010, 3534.313490, 3557.091395, 3579.868153, 3602.653856, 3625.438466, 3648.540833, 3671.641916, 3694.766487, 3717.890001, 3741.342416, 3764.793664, 3788.277648, 3811.760410, 3835.579468, 3859.397446, 3883.253683, 3907.108753, 3931.305545, 3955.501104, 3979.739922, 4004.277873, 4028.814757, 4053.395982, 4078.276082, 4103.155018, 4128.080182, 4153.004149, 4178.281512, 4203.557685, 4229.194781, 4254.830767, 4280.523201, 4306.214457, 4332.272390, 4358.329177, 4384.756784, 4411.183251, 4437.984278, 4464.784168, 4491.596667, 4518.408017, 4545.602582, 4572.795995, 4600.377833, 4627.958498, 4655.952936, 4683.946197, 4712.357896, 4740.768453, 4769.204859, 4797.640100, 4826.506646, 4855.371997, 4884.251508, 4913.129995, 4942.437812, 4971.744503, 5001.085180, 5030.424794, 5059.803328, 5089.180735, 5118.999902, 5148.817992, 5178.682607, 5208.546115, 5238.462889, 5268.378563, 5298.351996, 5328.324317, 5358.358941, 5388.392398, 5418.491307, 5448.589083, 5478.753401, 5508.916584, 5539.151368, 5569.385055, 5599.691684, 5630.000030, 5660.384210, 5690.767280, 5721.228741, 5751.688978, 5782.231688, 5812.773289, 5843.401490, 5874.028564, 5904.734208, 5935.438706, 5966.229340, 5997.018785, 6027.896173, 6058.772455, 6089.738018, 6120.702716, 6151.671230, 6182.638555, 6213.696956, 6244.754298, 6275.904944, 6307.054394, 6338.298514, 6369.541484, 6400.879948, 6432.217210, 6463.657022, 6495.095663, 6526.636069, 6558.175355, 6589.820697, 6621.464929, 6653.216390, 6684.966750, 6716.824147, 6748.680327, 6780.645318, 6812.609180, 6844.684828, 6876.759312, 6908.945145, 6941.129800, 6973.427493, 7005.724083, 7038.136427, 7070.547565, 7103.076537, 7135.604323, 7168.250426, 7200.895393, 7233.663148, 7266.429713, 7299.321703, 7332.212563, 7365.231227, 7398.248698, 7431.393608, 7464.537367, 7497.810344, 7531.082121, 7564.486411, 7597.889591, 7631.427670, 7664.964687, 7698.637375, 7732.308900, 7766.118938, 7799.927702, 7833.875239, 7867.821588, 7901.907297, 7935.991852, 7970.218559, 8004.444102, 8038.806296, 8073.167310, 8107.669158, 8142.170014, 8176.813524, 8211.455953, 8246.243579, 8281.030098, 8315.962615, 8350.894002, 8385.973708, 8421.052285, 8456.282701, 8491.512010, 8526.894982, 8562.276850, 8597.815049, 8633.352063, 8668.898013, 8704.442901, 8740.144026, 8775.843997, 8811.701041, 8847.556942, 8883.572170, 8919.586187, 8955.761036, 8991.934751, 9028.273315, 9064.610738, 9101.113038, 9137.614216, 9174.286280, 9210.956044, 9247.797437, 9284.637508, 9321.649997, 9358.661907, 9395.849184, 9433.035252, 9470.399120, 9507.761794, 9545.304313, 9582.845672, 9620.567845, 9658.289830, 9696.195679, 9734.100366, 9772.192955, 9810.284392, 9848.561331, 9886.837130, 9925.302008, 9963.765942
+    ];
+    
+    // === COLOR SETUP ===
+    const HEX_COLORS = ['#000000', '#FF3333', '#33FF33', '#3333FF', '#FFFF33', '#FF33FF'];
+    
+    // === CORE FUNCTIONS ===
+    function idx(x, y) { return y * GRID + x; }
+
+    function init() {
+      grid.fill(0); 
+      energy.fill(0);
+      simulationStep = 0;
+      phiThresh = 50.0;
+
+      for (let s = 0; s < 4; s++) {
+        let x, y, isOccupied;
+        do {
+            isOccupied = false;
+            x = 5 + Math.floor(Math.random() * (GRID - 10));
+            y = 5 + Math.floor(Math.random() * (GRID - 10));
+            for (let i = -2; i <= 2; i++) {
+                for (let j = -2; j <= 2; j++) {
+                    if (grid[idx(x + i, y + j)] > 0) {
+                        isOccupied = true;
+                        break; // FIX: Exit inner loop once occupied
+                    }
+                }
+                if (isOccupied) break; // FIX: Exit outer loop
+            }
+        } while (isOccupied);
+
+        for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) {
+          const p = idx(x + i, y + j);
+          grid[p] = 1 + Math.floor(Math.random() * 5);
+          energy[p] = 5.0;
+        }
+      }
+      
+      statStep.textContent = '0';
+      statConscious.textContent = '0';
+      statClusters.textContent = '4';
+      statSpawn.textContent = getSpawnProb().toFixed(2);
+      phiSlider.value = 50.0;
+      phiValSpan.textContent = phiThresh.toFixed(1);
+      
+      render();
+    }
+
+    function getSpawnProb() {
+      const gamma = ZEROS[simulationStep % ZEROS.length];
+      // Note: The *0.1 factor is a deliberate choice for this JS version
+      // to create a slower, more observable wave pattern.
+      return (Math.sin(gamma * 0.1) + 1) / 2;
+    }
+
+    function countNeighbors(x, y) {
+      let count = 0;
+      for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
+        if (dx === 0 && dy === 0) continue;
+        const nx = (x + dx + GRID) % GRID;
+        const ny = (y + dy + GRID) % GRID;
+        if (grid[idx(nx, ny)] > 0) count++;
+      }
+      return count;
+    }
+
+    function findClusters() {
+      const visited = new Uint8Array(GRID * GRID);
+      const clusters = [];
+      for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+        const p = idx(x, y);
+        if (grid[p] > 0 && !visited[p]) {
+          const cluster = [];
+          const q = [[x, y]];
+          visited[p] = 1;
+          while (q.length) {
+            const [cx, cy] = q.shift();
+            cluster.push(idx(cx, cy));
+            for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
+              if (dx === 0 && dy === 0) continue;
+              const nx = (cx + dx + GRID) % GRID;
+              const ny = (cy + dy + GRID) % GRID;
+              const np = idx(nx, ny);
+              if (grid[np] > 0 && !visited[np]) {
+                visited[np] = 1;
+                q.push([nx, ny]);
+              }
+            }
+          }
+          clusters.push(cluster);
+        }
+      }
+      return clusters;
+    }
+
+    function update() {
+      const nextGrid = new Uint8Array(grid);
+      const nextEnergy = new Float32Array(energy);
+      const spawnProb = getSpawnProb();
+      const clusters = findClusters();
+      const conscious = new Set();
+
+      for (const cl of clusters) {
+        if ((cl.length * new Set(cl.map(p => grid[p])).size) > phiThresh) {
+          cl.forEach(p => conscious.add(p));
+        }
+      }
+
+      const stable = conscious.size > grid.length * 0.2;
+
+      for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+        const p = idx(x, y);
+        const state = grid[p];
+
+        if (conscious.has(p) && energy[p] > 1.0) {
+          // FIX: Use all 8 neighbors for spreading, matching the Python script
+          const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+          for (const [dx, dy] of dirs) {
+            const nx = (x + dx + GRID) % GRID, ny = (y + dy + GRID) % GRID;
+            const np = idx(nx, ny);
+            if (grid[np] === 0 && Math.random() < spawnProb * 0.5) {
+              nextGrid[np] = 1 + Math.floor(Math.random() * 5);
+              nextEnergy[np] = 1.0;
+              nextEnergy[p] -= 1.0;
+              if (nextEnergy[p] <= 1.0) break;
+            }
+          }
+        } else {
+          const alive = countNeighbors(x, y);
+          if (state === 0 && alive === 3) {
+            nextGrid[p] = 1 + Math.floor(Math.random() * 5);
+            nextEnergy[p] = 1.0;
+          } else if (state > 0 && (alive < 2 || alive > 3)) {
+            nextGrid[p] = 0;
+            nextEnergy[p] = 0;
+          }
+        }
+      }
+
+      for (let i = 0; i < grid.length; i++) {
+        if (nextEnergy[i] <= 0.01) { nextGrid[i] = 0; nextEnergy[i] = 0; }
+        if (conscious.has(i) && nextGrid[i] > 0) {
+          const pulse = (Math.sin(ZEROS[(simulationStep + i) % ZEROS.length] * 0.1) + 1) / 2;
+          if (Math.random() < pulse * 0.02) nextEnergy[i] += 0.3;
+          if (Math.random() < 0.001) nextEnergy[i] += 0.1;
+          nextEnergy[i] = Math.min(nextEnergy[i], 8.0);
+        }
+      }
+
+      grid = nextGrid;
+      energy = nextEnergy;
+
+      if (simulationStep > 0 && simulationStep % 100 === 0 && stable) {
+        phiThresh = Math.max(10.0, phiThresh - 5.0);
+        phiValSpan.textContent = phiThresh.toFixed(1);
+        phiSlider.value = phiThresh;
+      }
+      
+      statStep.textContent = simulationStep;
+      statConscious.textContent = conscious.size;
+      statClusters.textContent = clusters.length;
+      statSpawn.textContent = spawnProb.toFixed(2);
+      
+      simulationStep++;
+    }
+
+    function render() {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (let y = 0; y < GRID; y++) {
+        for (let x = 0; x < GRID; x++) {
+          const state = grid[idx(x, y)];
+          if (state > 0) {
+            ctx.fillStyle = HEX_COLORS[state];
+            ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
+          }
+        }
+      }
+    }
+
+    // === ANIMATION LOOP & CONTROLS ===
+    let raf;
+    let frameCount = 0;
+    function loop() {
+      if (running) {
+        if (frameCount % simDelay === 0) {
+          update();
+          render();
+        }
+        frameCount++;
+        raf = requestAnimationFrame(loop);
+      }
+    }
+
+    document.getElementById('play').onclick = () => { if(!running) { running = true; loop(); } };
+    document.getElementById('pause').onclick = () => { running = false; cancelAnimationFrame(raf); };
+    document.getElementById('reset').onclick = () => { 
+      running = false; 
+      cancelAnimationFrame(raf); 
+      init(); 
+    };
+    document.getElementById('save').onclick = () => alert("GIF export is not yet implemented.");
+
+    phiSlider.addEventListener('input', (e) => {
+      phiThresh = parseFloat(e.target.value);
+      phiValSpan.textContent = phiThresh.toFixed(1);
+    });
+
+    speedSlider.addEventListener('input', (e) => {
+      simDelay = Math.floor(11 - parseFloat(e.target.value));
+      const speedLabels = ["Paused", "0.2x", "0.3x", "0.5x", "Normal", "1.5x", "2x", "3x", "5x", "Max"];
+      speedValSpan.textContent = speedLabels[+e.target.value-1];
+    });
+
+    // === INITIALIZE ===
+    init();
+  </script>
+</body>
+</html>
