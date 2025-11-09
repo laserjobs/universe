@@ -1,8 +1,16 @@
 # Python
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-.Python
-env/
+
+# Virtual Environments
 venv/
+.venv/
+env/
+
+# IDE / Editor specific
+.vscode/
+.idea/
+
+# Generated output - we only want the source code in the repo!
+frames/
+*.gif
