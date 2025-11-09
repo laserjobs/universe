@@ -12,49 +12,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # -------------------------------------------------
-      # 1. Checkout the repo
-      # -------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # -------------------------------------------------
-      # 2. Set up Python (any 3.9+ works)
-      # -------------------------------------------------
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"   # 3.9 is fine, 3.11 is faster
+          python-version: "3.11"
 
-      # -------------------------------------------------
-      # 3. Install dependencies
-      # -------------------------------------------------
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install numpy matplotlib mpmath imageio
+          pip install numpy matplotlib mpmath imageio flake8  # ← ADD flake8 HERE
 
-      # -------------------------------------------------
-      # 4. (Optional) Lint with flake8
-      # -------------------------------------------------
       - name: Lint with flake8
         run: |
-          pip install flake8
-          # Fail on syntax errors / undefined names
+          # Stop build on syntax errors or undefined names
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Treat everything else as warnings
+          # Exit-zero: treat other issues as warnings
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      # -------------------------------------------------
-      # 5. Run the simulation in CI test mode
-      # -------------------------------------------------
       - name: Run CEA-4.0 in test mode
         run: |
           python main_final_corrected.py --test
 
-      # -------------------------------------------------
-      # 6. Upload the GIF (and any frames) as artifacts
-      # -------------------------------------------------
       - name: Upload GIF artifact
         uses: actions/upload-artifact@v4
         with:
