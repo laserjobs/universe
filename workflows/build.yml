@@ -1,0 +1,48 @@
+# .github/workflows/build.yml
+# This file defines the "build" and "test" process for the CEA-4.0 simulation.
+
+name: Build and Test Simulation
+
+# --- Triggers: When this workflow runs ---
+on:
+  push:
+    branches: [ "main" ] # Run on pushes to the main branch
+  pull_request:
+    branches: [ "main" ] # Run on pull requests targeting the main branch
+
+# --- Jobs: The steps to perform ---
+jobs:
+  build-and-test:
+    # --- Environment: The virtual machine to use ---
+    runs-on: ubuntu-latest
+
+    # --- Steps: The sequence of commands to execute ---
+    steps:
+      # 1. Check out the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Set up the Python environment
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      # 3. Install the project dependencies from requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      # 4. (Optional but good practice) Lint the code with a style checker
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      # 5. Run the test command
+      - name: Run the simulation in test mode
+        run: python main.py --test
